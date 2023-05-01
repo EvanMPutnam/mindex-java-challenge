@@ -1,8 +1,13 @@
 package com.mindex.challenge.data;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.util.List;
 
+@Document(collection = "employee")
 public class Employee {
+    @Id
     private String employeeId;
     private String firstName;
     private String lastName;

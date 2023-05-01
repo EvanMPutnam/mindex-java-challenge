@@ -1,3 +1,70 @@
+# Submission Notes
+
+## Overall Notes
+1. I added a bunch of comments that serve as running commentary that we can discuss during the interview.  However, I 
+am of the opinion that good code self-documents, in most cases, and in production commenting every line wouldn't make sense.
+2. For the first problem I made the assumption, like most org tree structures, there are not circular modeled dependencies.
+3. I included a postman collection for convenience that can be used to query.
+
+## Original Approach
+The simpler solution I had coded out involved using MongoDB aggregations.  However, it seems this in-memory server
+does not support all the standard functionality that mongo allows.  This allowed for everything to be returned in
+a single query.  Below is a provided example of an aggregation that could perform all of the logic I wrote out at
+the database layer.  The query was tested in a mongo playground and if it were a full mongo db engine it would work.
+For example, the version of the in-memory DB that is used does not support graphLookup.
+```java
+package com.mindex.challenge.dao;
+
+import com.mindex.challenge.data.Employee;
+import com.mindex.challenge.data.ReportingStructure;
+import org.springframework.data.mongodb.repository.Aggregation;
+import org.springframework.stereotype.Repository;
+import org.springframework.data.mongodb.repository.MongoRepository;
+
+@Repository
+public interface EmployeeRepository extends MongoRepository<Employee, String> {
+
+    public static final String AGGREGATION_STEP_MATCH_EMPLOYEE = "  {\n" +
+            "    \"$match\": {\n" +
+            "      \"employeeId\": ?0\n" +
+            "    }\n" +
+            "  }";
+    public static final String AGGREGATION_STEP_GRAPH_LOOKUP = "  {\n" +
+            "    \"$graphLookup\": {\n" +
+            "      \"from\": \"employee\",\n" +
+            "      \"startWith\": \"$directReports.employeeId\",\n" +
+            "      \"connectFromField\": \"directReports.employeeId\",\n" +
+            "      \"connectToField\": \"employeeId\",\n" +
+            "      \"as\": \"reports\",\n" +
+            "      \"maxDepth\": 10,\n" +
+            "      \n" +
+            "    }\n" +
+            "  }";
+    public static final String AGGREGATION_STEP_PROJECT_REPORTING_STRUCTURE = "  {\n" +
+            "    \"$project\": {\n" +
+            "      \"employee\": \"$$ROOT\",\n" +
+            "      \"numberOfReports\": {\n" +
+            "        \"$size\": \"$reports\"\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }";
+
+    Employee findByEmployeeId(String employeeId);
+
+    /**
+     * @param employeeId
+     * @return an array of ReportingStructure.  While it should only ever be 1 or 0 results aggregate returns an array.
+     */
+    @Aggregation(pipeline = {
+            AGGREGATION_STEP_MATCH_EMPLOYEE,
+            AGGREGATION_STEP_GRAPH_LOOKUP,
+            AGGREGATION_STEP_PROJECT_REPORTING_STRUCTURE
+    })
+    ReportingStructure[] findReportingStructure(String employeeId);
+}
+
+```
+
 # Coding Challenge
 ## What's Provided
 A simple [Spring Boot](https://projects.spring.io/spring-boot/) web application has been created and bootstrapped 

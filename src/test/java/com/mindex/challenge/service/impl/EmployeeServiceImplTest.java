@@ -1,6 +1,7 @@
 package com.mindex.challenge.service.impl;
 
 import com.mindex.challenge.data.Employee;
+import com.mindex.challenge.data.ReportingStructure;
 import com.mindex.challenge.service.EmployeeService;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,6 +25,7 @@ public class EmployeeServiceImplTest {
 
     private String employeeUrl;
     private String employeeIdUrl;
+    private String reportingStructureUrl;
 
     @Autowired
     private EmployeeService employeeService;
@@ -38,6 +40,7 @@ public class EmployeeServiceImplTest {
     public void setup() {
         employeeUrl = "http://localhost:" + port + "/employee";
         employeeIdUrl = "http://localhost:" + port + "/employee/{id}";
+        reportingStructureUrl = "http://localhost:" + port + "/employee/{id}/reportingStructure";
     }
 
     @Test
@@ -75,6 +78,27 @@ public class EmployeeServiceImplTest {
                         readEmployee.getEmployeeId()).getBody();
 
         assertEmployeeEquivalence(readEmployee, updatedEmployee);
+    }
+
+    @Test
+    public void testReportingStructure() {
+        String johnLennonId = "16a596ae-edd3-4847-99fe-c4518e82c86f";
+        String paulMId = "b7839309-3348-463b-a7e3-5de1c168beb3";
+        String ringoStarrId = "03aa1462-ffa9-4978-901b-7c001562cf6f";
+        String georgeHId = "c0c2293d-16bd-4603-8e08-638a9d18b22c";
+        String peteBestId = "62c1084e-6e34-4630-93fd-9153afb65309";
+
+        ReportingStructure reportingStructureJohn = restTemplate.getForEntity(reportingStructureUrl, ReportingStructure.class, johnLennonId).getBody();
+        ReportingStructure reportingStructurePaul = restTemplate.getForEntity(reportingStructureUrl, ReportingStructure.class, paulMId).getBody();
+        ReportingStructure reportingStructureRingo = restTemplate.getForEntity(reportingStructureUrl, ReportingStructure.class, ringoStarrId).getBody();
+        ReportingStructure reportingStructureGeorge = restTemplate.getForEntity(reportingStructureUrl, ReportingStructure.class, georgeHId).getBody();
+        ReportingStructure reportingStructurePete = restTemplate.getForEntity(reportingStructureUrl, ReportingStructure.class, peteBestId).getBody();
+
+        assertEquals(4, reportingStructureJohn.getNumberOfReports());
+        assertEquals(0, reportingStructurePaul.getNumberOfReports());
+        assertEquals(0, reportingStructureGeorge.getNumberOfReports());
+        assertEquals(2, reportingStructureRingo.getNumberOfReports());
+        assertEquals(0, reportingStructurePete.getNumberOfReports());
     }
 
     private static void assertEmployeeEquivalence(Employee expected, Employee actual) {
