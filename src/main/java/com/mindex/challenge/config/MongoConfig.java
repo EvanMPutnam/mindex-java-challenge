@@ -35,10 +35,6 @@ public class MongoConfig{
     @Bean(destroyMethod="close")
     public MongoClient mongoClient() {
         MongoClient client = MongoClients.create("mongodb:/" + mongoServer().getLocalAddress());
-        System.out.println("HERE");
-        for (String s : client.getDatabase("test").listCollectionNames()) {
-            System.out.println(s);
-        }
         return client;
     }
 }
